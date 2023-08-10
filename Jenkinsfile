@@ -21,7 +21,7 @@ properties(
 )
 
 // NEXUS
-def RepositoryName = 'cpp-demo'
+def RepositoryName = 'node-demo'
 def NexusUrl = "192.168.1.159"
 def NexusRegistry = "demo"
 def credentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
