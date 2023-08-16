@@ -22,7 +22,7 @@ properties(
 
 // NEXUS
 def RepositoryName = 'node-demo'
-def NexusUrl = "192.168.1.159"
+def NexusUrl = "localhost"
 def NexusRegistry = "demo"
 def credentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
                    com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials.class,
