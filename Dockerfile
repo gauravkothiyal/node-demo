@@ -1,7 +1,7 @@
 # Stage 1: install dependencies
 FROM node:17-alpine AS deps
 WORKDIR /app
-COPY package*.json .
+COPY * .
 ARG NODE_ENV
 ENV NODE_ENV $NODE_ENV
 RUN npm install
