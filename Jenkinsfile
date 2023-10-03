@@ -22,15 +22,15 @@ properties(
 
 // NEXUS
 def RepositoryName = 'node-demo'
-def NexusUrl = "localhost"
-def NexusRegistry = "demo"
+def HarborUrl = "http://10.39.1.159:2880"
+def HarborRegistry = "node-demo"
 def credentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
                    com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials.class,
                    jenkins.model.Jenkins.instance
                   )
-def matchingCredentials = credentials.findResult { it.id == "nexus-credentials" ? it : null }
-def NexusUser = "${matchingCredentials.username}".toString()
-def NexusPassword = "${matchingCredentials.password}".toString()
+def matchingCredentials = credentials.findResult { it.id == "harbor-credentials" ? it : null }
+def HarborUser = "${matchingCredentials.username}".toString()
+def HarborPassword = "${matchingCredentials.password}".toString()
 
 node ('macOS')  {
     wrap([$class: 'BuildUser']) {
@@ -43,11 +43,11 @@ node ('macOS')  {
                        }
 
                    stage('Build docker image and run tests') {
-                       this.buildImage(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword)
+                       this.buildImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword)
                         }
 
                    stage('Scan docker image') {
-                       this.scanImage(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword)
+                       this.scanImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword)
                         }
 
                    stage('SonarQube Analysis') {
@@ -57,8 +57,8 @@ node ('macOS')  {
                           }
                         }
 
-                   stage('Push docker image to nexus') {
-                       this.pushImages(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword)
+                   stage('Push docker image to harbor') {
+                       this.pushImages(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword)
                         }
 
                    stage('Publish reports') {
@@ -91,8 +91,8 @@ def runDocker(command) {
     sh("sudo docker ${command}")
 }
 
-def buildImage(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword) {
-        def getImagesCmd = "curl -u ${NexusUser}:${NexusPassword} -X GET 'http://${NexusUrl}:8081/service/rest/v1/search?repository=${NexusRegistry}&name=${NexusRegistry}/${RepositoryName}'"
+def buildImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
+        def getImagesCmd = "curl -u ${HarborUser}:${HarborPassword} -X GET 'http://${HarborUrl}:8081/service/rest/v1/search?repository=${HarborRegistry}&name=${HarborRegistry}/${RepositoryName}'"
         def findLastSemanticVerCmd = "jq -r -c --raw-output '.items[].version'  | sort"
         def incVersionCmd = 'perl -pe \'s/^((\\d+\\.)*)(\\d+)(.*)$/$1.($3+1).$4/e\''
         def fullCmd = "${getImagesCmd} | ${findLastSemanticVerCmd} | ${incVersionCmd}"
@@ -105,31 +105,31 @@ def buildImage(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword
         def dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss")
         def date = new Date()
         def buildDate = (dateFormat.format(date)) 
-        sh("docker build -t ${NexusUrl}:8082/${NexusRegistry}/${RepositoryName}:1.0.${BUILD_ID}    .")
+        sh("docker build -t ${HarborUrl}:8082/${HarborRegistry}/${RepositoryName}:1.0.${BUILD_ID}    .")
 }
 
-def scanImage(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword) {
+def scanImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
         echo "Scanning ${RepositoryName}"
         env.RepositoryName = "${RepositoryName}"
-        env.NexusUser = "${NexusUser}"
-        env.NexusPassword = "${NexusPassword}"
-        env.NexusUrl = "${NexusUrl}"
-        env.NexusRegistry = "${NexusRegistry}"
+        env.HarborUser = "${HarborUser}"
+        env.HarborPassword = "${HarborPassword}"
+        env.HarborUrl = "${HarborUrl}"
+        env.HarborRegistry = "${HarborRegistry}"
         sh label: '', script: '''#!/usr/bin/env bash
                                  export DOCKER_HOST=unix:///Users/gauravkothiyal/.docker/run/docker.sock 
-                                 trivy image   --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${NexusUrl}:8082/\${NexusRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
+                                 trivy image   --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
 }
 
-def pushImages(RepositoryName, NexusUrl, NexusRegistry, NexusUser, NexusPassword) {
+def pushImages(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
         echo "Pushing ${RepositoryName}"
         env.RepositoryName = "${RepositoryName}"
-        env.NexusUser = "${NexusUser}"
-        env.NexusPassword = "${NexusPassword}"
-        env.NexusUrl = "${NexusUrl}"
-        env.NexusRegistry = "${NexusRegistry}"
+        env.HarborUser = "${HarborUser}"
+        env.HarborPassword = "${HarborPassword}"
+        env.HarborUrl = "${HarborUrl}"
+        env.HarborRegistry = "${HarborRegistry}"
         sh label: '', script: '''#!/usr/bin/env bash
 set -x
-                                 docker login -u \${NexusUser} -p \${NexusPassword} \${NexusUrl}:8082
-                                 docker push \${NexusUrl}:8082/\${NexusRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}
-                                 docker rmi \${NexusUrl}:8082/\${NexusRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
+                                 docker login -u \${HarborUser} -p \${HarborPassword} \${HarborUrl}:8082
+                                 docker push \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}
+                                 docker rmi \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
     }
