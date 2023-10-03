@@ -118,7 +118,7 @@ def scanImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassw
         env.HarborRegistry = "${HarborRegistry}"
         sh label: '', script: '''#!/usr/bin/env bash
                                 #  export DOCKER_HOST=unix:///Users/gauravkothiyal/.docker/run/docker.sock 
-                                 docker run aquasec/trivy image    --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${HarborUrl}/library/\${RepositoryName}:1.0.\${BUILD_ID}'''
+                                 trivy image    --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${HarborUrl}/library/\${RepositoryName}:1.0.\${BUILD_ID}'''
 }
 
 
