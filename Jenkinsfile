@@ -92,20 +92,21 @@ def runDocker(command) {
 }
 
 def buildImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
-        def getImagesCmd = "curl -u ${HarborUser}:${HarborPassword} -X GET 'http://${HarborUrl}:8081/service/rest/v1/search?repository=${HarborRegistry}&name=${HarborRegistry}/${RepositoryName}'"
-        def findLastSemanticVerCmd = "jq -r -c --raw-output '.items[].version'  | sort"
-        def incVersionCmd = 'perl -pe \'s/^((\\d+\\.)*)(\\d+)(.*)$/$1.($3+1).$4/e\''
-        def fullCmd = "${getImagesCmd} | ${findLastSemanticVerCmd} | ${incVersionCmd}"
-        imageVersion = sh(returnStdout: true, script: fullCmd).trim()
-        if (!imageVersion) {
-            imageVersion = '1.0.0'
-        }
-        echo 'Next Image Version: ' + imageVersion
+        // def getImagesCmd = "curl -u ${HarborUser}:${HarborPassword} -X GET 'http://${HarborUrl}:8081/service/rest/v1/search?repository=${HarborRegistry}&name=${HarborRegistry}/${RepositoryName}'"
+        // def findLastSemanticVerCmd = "jq -r -c --raw-output '.items[].version'  | sort"
+        // def incVersionCmd = 'perl -pe \'s/^((\\d+\\.)*)(\\d+)(.*)$/$1.($3+1).$4/e\''
+        // def fullCmd = "${getImagesCmd} | ${findLastSemanticVerCmd} | ${incVersionCmd}"
+        // imageVersion = sh(returnStdout: true, script: fullCmd).trim()
+        // if (!imageVersion) {
+        //     imageVersion = '1.0.0'
+        // }
+        // echo 'Next Image Version: ' + imageVersion
         def gitHash=sh (returnStdout: true, script: "git rev-parse HEAD").trim()
         def dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss")
         def date = new Date()
         def buildDate = (dateFormat.format(date)) 
-        sh("docker build -t ${HarborUrl}:8082/${HarborRegistry}/${RepositoryName}:1.0.${BUILD_ID}    .")
+        // sh("docker build -t ${HarborUrl}/${HarborRegistry}/${RepositoryName}:1.0.${BUILD_ID}    .")
+        sh("docker build -t ${HarborUrl}/library/${RepositoryName}:1.0.${BUILD_ID}    .")
 }
 
 def scanImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
@@ -117,7 +118,7 @@ def scanImage(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassw
         env.HarborRegistry = "${HarborRegistry}"
         sh label: '', script: '''#!/usr/bin/env bash
                                  export DOCKER_HOST=unix:///Users/gauravkothiyal/.docker/run/docker.sock 
-                                 trivy image   --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
+                                 trivy image   --dependency-tree   -s MEDIUM,HIGH,CRITICAL  --ignore-unfixed --exit-code 0   --format template --template "@html.tpl" -o report.html \${HarborUrl}/library/\${RepositoryName}:1.0.\${BUILD_ID}'''
 }
 
 def pushImages(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPassword) {
@@ -129,7 +130,7 @@ def pushImages(RepositoryName, HarborUrl, HarborRegistry, HarborUser, HarborPass
         env.HarborRegistry = "${HarborRegistry}"
         sh label: '', script: '''#!/usr/bin/env bash
 set -x
-                                 docker login -u \${HarborUser} -p \${HarborPassword} \${HarborUrl}:8082
-                                 docker push \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}
-                                 docker rmi \${HarborUrl}:8082/\${HarborRegistry}/\${RepositoryName}:1.0.\${BUILD_ID}'''
+                                 docker login -u \${HarborUser} -p \${HarborPassword} \${HarborUrl}
+                                 docker push \${HarborUrl}/library/\${RepositoryName}:1.0.\${BUILD_ID}
+                                 docker rmi \${HarborUrl}/library/\${RepositoryName}:1.0.\${BUILD_ID}'''
     }
