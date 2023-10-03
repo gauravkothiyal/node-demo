@@ -32,7 +32,7 @@ def matchingCredentials = credentials.findResult { it.id == "harbor-credentials"
 def HarborUser = "${matchingCredentials.username}".toString()
 def HarborPassword = "${matchingCredentials.password}".toString()
 
-node ('macOS')  {
+node ()  {
     wrap([$class: 'BuildUser']) {
     	wrap([$class: 'MaskPasswordsBuildWrapper']) {
            wrap([$class: 'TimestamperBuildWrapper'] ) {
