@@ -22,7 +22,7 @@ properties(
 
 // NEXUS
 def RepositoryName = 'node-demo'
-def HarborUrl = "http://10.39.1.159:2880"
+def HarborUrl = "10.39.1.159:2880"
 def HarborRegistry = "node-demo"
 def credentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
                    com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials.class,
