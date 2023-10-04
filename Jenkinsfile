@@ -20,10 +20,10 @@ properties(
         ]             
 )
 
-// NEXUS
-def RepositoryName = 'node-demo'
+// Harbor
+def RepositoryName = 'genesis-demo'
 def HarborUrl = "10.39.1.159:2880"
-def HarborRegistry = "node-demo"
+def HarborRegistry = "genesis-demo"
 def credentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
                    com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials.class,
                    jenkins.model.Jenkins.instance
