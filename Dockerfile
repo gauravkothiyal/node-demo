@@ -15,6 +15,7 @@ COPY public ./public
 COPY package.json next.config.js jsconfig.json ./
 RUN npm run build
 
+
 # Stage 3: run
 FROM node:17-alpine
 WORKDIR /app
@@ -23,3 +24,5 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 CMD ["npm", "run", "start"]
+
+RUN echo "End of Docker Run"
